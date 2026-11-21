@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using TicketFlow.Api.RateLimiting;
 using TicketFlow.Application.Dtos.Auth;
 using TicketFlow.Application.Services;
 using TicketFlow.Domain.Exceptions;
@@ -12,6 +14,7 @@ namespace TicketFlow.Api.Controllers;
 public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("register")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     public async Task<ActionResult<UserDto>> Register(RegisterRequest request, CancellationToken ct)
     {
         var user = await authService.RegisterAsync(request, ct);
@@ -19,6 +22,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
     {
         var response = await authService.LoginAsync(request, ct);
@@ -26,6 +30,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     public async Task<ActionResult<AuthResponse>> Refresh(RefreshRequest request, CancellationToken ct)
     {
         var response = await authService.RefreshAsync(request, ct);

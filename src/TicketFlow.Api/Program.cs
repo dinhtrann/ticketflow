@@ -1,15 +1,21 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using TicketFlow.Api.Exceptions;
 using TicketFlow.Api.Filters;
+using TicketFlow.Api.RateLimiting;
 using TicketFlow.Application.Dtos.Auth;
 using TicketFlow.Application.Dtos.Events;
 using TicketFlow.Application.Dtos.Seats;
@@ -35,6 +41,7 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 var adminOptions = builder.Configuration.GetSection("Admin").Get<AdminOptions>() ?? new AdminOptions();
 var bookingOptions = builder.Configuration.GetSection("Booking").Get<BookingOptions>() ?? new BookingOptions();
+var rateLimitingOptions = builder.Configuration.GetSection("RateLimiting").Get<RateLimitingOptions>() ?? new RateLimitingOptions();
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
@@ -96,6 +103,35 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddSingleton(rateLimitingOptions);
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = WriteRateLimitProblemAsync;
+
+    options.AddPolicy(RateLimitPolicies.Auth, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            PartitionKeyByIp(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = rateLimitingOptions.AuthPermitLimit,
+                Window = TimeSpan.FromSeconds(rateLimitingOptions.AuthWindowSeconds),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
+    options.AddPolicy(RateLimitPolicies.Booking, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            PartitionKeyForBooking(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = rateLimitingOptions.BookingPermitLimit,
+                Window = TimeSpan.FromSeconds(rateLimitingOptions.BookingWindowSeconds),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+});
 
 builder.Services.AddHealthChecks()
     .AddSqlServer(connectionString, healthQuery: "SELECT 1;", name: "sqlserver");
@@ -159,10 +195,41 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 
 app.Run();
+
+static string PartitionKeyByIp(HttpContext httpContext) =>
+    $"ip:{httpContext.Connection.RemoteIpAddress}";
+
+static string PartitionKeyForBooking(HttpContext httpContext)
+{
+    var subject = httpContext.User.FindFirstValue("sub");
+    return subject is not null
+        ? $"user:{subject}"
+        : PartitionKeyByIp(httpContext);
+}
+
+static async ValueTask WriteRateLimitProblemAsync(OnRejectedContext context, CancellationToken cancellationToken)
+{
+    var httpContext = context.HttpContext;
+    var problem = new ProblemDetails
+    {
+        Type = "https://ticketflow.local/errors/rate-limit-exceeded",
+        Title = "Rate Limit Exceeded",
+        Status = StatusCodes.Status429TooManyRequests,
+        Detail = "Too many requests. Please try again later.",
+        Instance = httpContext.Request.Path.Value,
+    };
+    problem.Extensions["code"] = "RATE_LIMIT_EXCEEDED";
+    problem.Extensions["traceId"] = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+    httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+    httpContext.Response.ContentType = "application/problem+json";
+    await JsonSerializer.SerializeAsync(httpContext.Response.Body, problem, cancellationToken: cancellationToken);
+}
 
 static async Task WriteHealthReportAsync(HttpContext context, HealthReport report)
 {

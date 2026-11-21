@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using TicketFlow.Api.RateLimiting;
 using TicketFlow.Application.Common;
 using TicketFlow.Application.Dtos.Events;
 using TicketFlow.Application.Dtos.Seats;
@@ -28,6 +30,7 @@ public class SeatsController(ISeatService seatService) : ControllerBase
 
     [HttpPost("seats/{seatId:guid}/hold")]
     [Authorize]
+    [EnableRateLimiting(RateLimitPolicies.Booking)]
     public async Task<ActionResult<SeatHoldResponse>> Hold(Guid seatId, CancellationToken ct)
     {
         var result = await seatService.HoldAsync(seatId, GetCurrentUserId(), ct);
