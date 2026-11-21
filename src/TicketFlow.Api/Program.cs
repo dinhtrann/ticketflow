@@ -19,12 +19,14 @@ using TicketFlow.Api.Filters;
 using TicketFlow.Api.RateLimiting;
 using TicketFlow.Application.Dtos.Auth;
 using TicketFlow.Application.Dtos.Events;
+using TicketFlow.Application.Dtos.Orders;
 using TicketFlow.Application.Dtos.Seats;
 using TicketFlow.Application.Interfaces;
 using TicketFlow.Application.Options;
 using TicketFlow.Application.Services;
 using TicketFlow.Application.Validators.Auth;
 using TicketFlow.Application.Validators.Events;
+using TicketFlow.Application.Validators.Orders;
 using TicketFlow.Application.Validators.Seats;
 using TicketFlow.Infrastructure.Persistence;
 using TicketFlow.Infrastructure.Persistence.Repositories;
@@ -150,6 +152,7 @@ builder.Services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<ISeatService, SeatService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAdminSeeder, AdminSeeder>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -171,6 +174,8 @@ builder.Services.AddScoped<IValidator<UpdateEventStatusRequest>, UpdateEventStat
 builder.Services.AddScoped<IValidator<BulkSeatRequest>, BulkSeatRequestValidator>();
 builder.Services.AddScoped<IValidator<EventSearchQuery>, EventSearchQueryValidator>();
 builder.Services.AddScoped<IValidator<SeatSearchQuery>, SeatSearchQueryValidator>();
+builder.Services.AddScoped<IValidator<ConfirmOrderRequest>, ConfirmOrderRequestValidator>();
+builder.Services.AddScoped<IValidator<OrderSearchQuery>, OrderSearchQueryValidator>();
 
 var app = builder.Build();
 
