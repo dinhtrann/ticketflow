@@ -10,10 +10,15 @@ public class OrderRepository(AppDbContext db) : IOrderRepository
 
     public Task<Order?> FindByUserAndIdempotencyKeyAsync(Guid userId, string idempotencyKey, CancellationToken ct = default)
         => db.Orders.AsNoTracking()
+            .Include(o => o.Event)
+            .Include(o => o.Seat)
             .FirstOrDefaultAsync(o => o.UserId == userId && o.IdempotencyKey == idempotencyKey, ct);
 
     public Task<Order?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => db.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id, ct);
+        => db.Orders.AsNoTracking()
+            .Include(o => o.Event)
+            .Include(o => o.Seat)
+            .FirstOrDefaultAsync(o => o.Id == id, ct);
 
     public void Add(Order order) => db.Orders.Add(order);
 }
