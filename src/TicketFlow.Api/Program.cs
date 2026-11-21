@@ -22,6 +22,7 @@ using TicketFlow.Application.Validators.Seats;
 using TicketFlow.Infrastructure.Persistence;
 using TicketFlow.Infrastructure.Persistence.Repositories;
 using TicketFlow.Infrastructure.Security;
+using TicketFlow.Infrastructure.Workers;
 
 // Load .env (repo root) vào environment variables trước khi build configuration.
 DotNetEnv.Env.TraversePath().Load();
@@ -121,6 +122,8 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<ISeatRepository, SeatRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+builder.Services.AddHostedService<ExpiredSeatReleaseWorker>();
 
 builder.Services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
 builder.Services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
