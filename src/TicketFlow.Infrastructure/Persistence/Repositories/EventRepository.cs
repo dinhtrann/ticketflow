@@ -8,6 +8,9 @@ public class EventRepository(AppDbContext db) : IEventRepository
 {
     public IQueryable<Event> GetQueryable() => db.Events.AsNoTracking();
 
+    public Task<Event?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        => db.Events.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, ct);
+
     public Task<Event?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default)
         => db.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
 

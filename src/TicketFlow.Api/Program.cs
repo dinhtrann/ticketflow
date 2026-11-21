@@ -11,10 +11,12 @@ using Microsoft.OpenApi;
 using TicketFlow.Api.Exceptions;
 using TicketFlow.Api.Filters;
 using TicketFlow.Application.Dtos.Auth;
+using TicketFlow.Application.Dtos.Events;
 using TicketFlow.Application.Interfaces;
 using TicketFlow.Application.Options;
 using TicketFlow.Application.Services;
 using TicketFlow.Application.Validators.Auth;
+using TicketFlow.Application.Validators.Events;
 using TicketFlow.Infrastructure.Persistence;
 using TicketFlow.Infrastructure.Persistence.Repositories;
 using TicketFlow.Infrastructure.Security;
@@ -104,9 +106,11 @@ builder.Services.AddSingleton(new AuthOptions());
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IAdminSeeder, AdminSeeder>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAsyncQueryExecutor, AsyncQueryExecutor>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
@@ -117,6 +121,10 @@ builder.Services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator
 builder.Services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
 builder.Services.AddScoped<IValidator<RefreshRequest>, RefreshRequestValidator>();
 builder.Services.AddScoped<IValidator<RevokeRequest>, RevokeRequestValidator>();
+builder.Services.AddScoped<IValidator<CreateEventRequest>, CreateEventRequestValidator>();
+builder.Services.AddScoped<IValidator<UpdateEventStatusRequest>, UpdateEventStatusRequestValidator>();
+builder.Services.AddScoped<IValidator<BulkSeatRequest>, BulkSeatRequestValidator>();
+builder.Services.AddScoped<IValidator<EventSearchQuery>, EventSearchQueryValidator>();
 
 var app = builder.Build();
 
