@@ -12,5 +12,8 @@ public class UserRepository(AppDbContext db) : IUserRepository
     public Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, ct);
 
+    public Task<bool> AnyAsync(CancellationToken ct = default)
+        => db.Users.AnyAsync(ct);
+
     public void Add(User user) => db.Users.Add(user);
 }
