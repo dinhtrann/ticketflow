@@ -12,6 +12,8 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args)
     {
+        DotNetEnv.Env.TraversePath().Load();
+
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Default")
                         ?? "Your_Connection_String";
 
