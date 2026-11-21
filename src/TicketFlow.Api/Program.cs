@@ -12,11 +12,13 @@ using TicketFlow.Api.Exceptions;
 using TicketFlow.Api.Filters;
 using TicketFlow.Application.Dtos.Auth;
 using TicketFlow.Application.Dtos.Events;
+using TicketFlow.Application.Dtos.Seats;
 using TicketFlow.Application.Interfaces;
 using TicketFlow.Application.Options;
 using TicketFlow.Application.Services;
 using TicketFlow.Application.Validators.Auth;
 using TicketFlow.Application.Validators.Events;
+using TicketFlow.Application.Validators.Seats;
 using TicketFlow.Infrastructure.Persistence;
 using TicketFlow.Infrastructure.Persistence.Repositories;
 using TicketFlow.Infrastructure.Security;
@@ -128,6 +130,7 @@ builder.Services.AddScoped<IValidator<CreateEventRequest>, CreateEventRequestVal
 builder.Services.AddScoped<IValidator<UpdateEventStatusRequest>, UpdateEventStatusRequestValidator>();
 builder.Services.AddScoped<IValidator<BulkSeatRequest>, BulkSeatRequestValidator>();
 builder.Services.AddScoped<IValidator<EventSearchQuery>, EventSearchQueryValidator>();
+builder.Services.AddScoped<IValidator<SeatSearchQuery>, SeatSearchQueryValidator>();
 
 var app = builder.Build();
 
