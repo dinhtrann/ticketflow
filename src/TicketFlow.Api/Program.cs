@@ -31,6 +31,7 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 var adminOptions = builder.Configuration.GetSection("Admin").Get<AdminOptions>() ?? new AdminOptions();
+var bookingOptions = builder.Configuration.GetSection("Booking").Get<BookingOptions>() ?? new BookingOptions();
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
@@ -102,11 +103,13 @@ builder.Services.AddProblemDetails();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton(jwtOptions);
 builder.Services.AddSingleton(adminOptions);
+builder.Services.AddSingleton(bookingOptions);
 builder.Services.AddSingleton(new AuthOptions());
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddSingleton<IJwtTokenProvider, JwtTokenProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<ISeatService, SeatService>();
 builder.Services.AddScoped<IAdminSeeder, AdminSeeder>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
