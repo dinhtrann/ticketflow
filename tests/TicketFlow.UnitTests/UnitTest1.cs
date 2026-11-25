@@ -1,4 +1,4 @@
-﻿namespace TicketFlow.UnitTests;
+namespace TicketFlow.UnitTests;
 
 public class UnitTest1
 {
