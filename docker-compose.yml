@@ -16,5 +16,32 @@ services:
       retries: 12
       start_period: 30s
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ticketflow-api
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=TicketFlow;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD must be set in .env};TrustServerCertificate=True;"
+      Jwt__SecretKey: ${Jwt__SecretKey:?Jwt__SecretKey must be set in .env}
+      Jwt__Issuer: ${Jwt__Issuer:-TicketFlow}
+      Jwt__Audience: ${Jwt__Audience:-TicketFlow.Api}
+      Admin__Email: ${Admin__Email:-admin@ticketflow.com}
+      Admin__Password: ${Admin__Password:?Admin__Password must be set in .env}
+      Database__AutoMigrate: "true"
+      Booking__HoldDurationMinutes: ${Booking__HoldDurationMinutes:-10}
+      Booking__ReleaseWorkerIntervalSeconds: ${Booking__ReleaseWorkerIntervalSeconds:-30}
+      RateLimiting__AuthPermitLimit: ${RateLimiting__AuthPermitLimit:-10}
+      RateLimiting__AuthWindowSeconds: ${RateLimiting__AuthWindowSeconds:-60}
+      RateLimiting__BookingPermitLimit: ${RateLimiting__BookingPermitLimit:-60}
+      RateLimiting__BookingWindowSeconds: ${RateLimiting__BookingWindowSeconds:-60}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
 volumes:
   sqlserver-data:
